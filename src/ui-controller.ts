@@ -6,7 +6,8 @@ import { sounds } from './sound';
 import { i18n } from './localization';
 import { compose } from './compose';
 import { PAKISTAN_PRAYER_TIMES } from './mock-data';
-import type { Email, Folder, Theme } from './types';
+import type { Email, Folder, Theme, Thread } from './types';
+import { api } from './api-client';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -276,7 +277,7 @@ class UIController {
     return colors[Math.abs(h) % colors.length];
   }
 
-  // ─── Email Detail ─────────────────────────────────────────────────────────
+  // ─── Email Detail (Threaded Conversation View) ────────────────────────────
   private renderEmailDetail(id: string) {
     const em = state.emails.find(e => e.id === id);
     const detailEl = $('email-detail-view');
@@ -286,7 +287,16 @@ class UIController {
     if (listEl) listEl.style.display = 'none';
     detailEl.style.display = 'flex';
 
-    detailEl.innerHTML = `
+    // Render toolbar + skeleton immediately
+    detailEl.innerHTML = this.buildDetailShell(em, id);
+    this.wireDetailToolbar(em, id, detailEl);
+
+    // Async: fetch thread and render conversation cards
+    this.renderThreadCards(em, id, detailEl);
+  }
+
+  private buildDetailShell(em: Email, id: string): string {
+    return `
       <div class="detail-toolbar">
         <button class="icon-btn" id="detail-back-btn" title="Back to inbox">
           <span class="material-symbols-outlined">arrow_back</span>
@@ -303,65 +313,189 @@ class UIController {
           </button>
         </div>
       </div>
-
-      <div class="detail-content">
-        <h2 class="detail-subject">${em.subject}
-          <button class="icon-btn detail-star-btn" id="detail-star-btn" style="vertical-align:middle">
+      <div class="detail-content" id="detail-content-area">
+        <div class="detail-subject-title">
+          ${em.subject}
+          <button class="icon-btn" id="detail-star-btn" style="vertical-align:middle">
             <span class="material-symbols-outlined" style="color:${em.isStarred ? '#f9ab00' : 'inherit'}">${em.isStarred ? 'star' : 'star_border'}</span>
           </button>
-        </h2>
-
-        <div class="detail-meta-row">
-          <div class="email-avatar" style="background:${this.avatarColor(em.fromAvatar)};flex-shrink:0">${em.fromAvatar[0]}</div>
-          <div class="detail-sender-info">
-            <div class="detail-from-name">${em.fromName}
-              <span class="detail-from-email">&lt;${em.fromEmail}&gt;</span>
-            </div>
-            <div class="detail-to-line">to ${em.to}</div>
-            <div class="detail-date">${new Date(em.date).toLocaleString('en-PK', { dateStyle: 'full', timeStyle: 'short' })}</div>
-          </div>
-          <div class="detail-meta-actions">
-            <button class="icon-btn" id="detail-reply-icon-btn" title="Reply"><span class="material-symbols-outlined">reply</span></button>
-            <button class="icon-btn" id="detail-fwd-icon-btn" title="Forward"><span class="material-symbols-outlined">forward</span></button>
-            <button class="icon-btn" id="detail-more-meta-btn" title="More"><span class="material-symbols-outlined">more_vert</span></button>
+        </div>
+        <div id="thread-cards-area" style="margin-top:8px">
+          <div style="text-align:center;padding:32px;color:var(--text-tertiary);font-size:13px">
+            <span class="material-symbols-outlined" style="font-size:28px;display:block;margin-bottom:8px">hourglass_top</span>
+            Loading conversation…
           </div>
         </div>
+      </div>
+    `;
+  }
 
-        <div class="detail-security-banner">
-          <span class="material-symbols-outlined" style="font-size:16px;color:#0b6623">verified_user</span>
-          <span>TLS Encrypted • Toggle Mail Pakistan Sovereign PKI Verified</span>
+  private async renderThreadCards(em: Email, id: string, detailEl: HTMLElement) {
+    // Try to get full thread from API; fall back to pseudo-thread from local state
+    let messages: Email[] = [];
+    try {
+      const threadId = em.threadId || `subj_${em.subject.replace(/^(re|fwd|fw):\s*/gi,'').trim().toLowerCase()}`;
+      const thread: Thread | null = await api.getThread(threadId);
+      messages = thread ? (thread.messages as Email[]) : [];
+    } catch {}
+
+    // Fallback: group by subject match from local emails
+    if (messages.length === 0) {
+      const normSubject = (s: string) => s.replace(/^(re|fwd|fw):\s*/gi,'').trim().toLowerCase();
+      const emNorm = normSubject(em.subject);
+      messages = state.emails
+        .filter(e => normSubject(e.subject) === emNorm && (e.folder === em.folder || e.folder === 'sent'))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      if (messages.length === 0) messages = [em];
+    }
+
+    const area = detailEl.querySelector<HTMLElement>('#thread-cards-area');
+    if (!area) return;
+
+    const threadCount = messages.length;
+    area.innerHTML = `
+      <div class="conversation-thread-container" id="thread-messages">
+        ${messages.map((msg, idx) => this.buildThreadCard(msg, idx, threadCount, id)).join('')}
+      </div>
+      <div class="inline-reply-card" id="inline-reply-card" style="margin-top:16px">
+        <div class="inline-reply-header">
+          <span class="material-symbols-outlined" style="font-size:15px;vertical-align:middle;margin-right:4px">reply</span>
+          Reply to ${em.fromName}
         </div>
-
-        <div class="detail-body">${em.body}</div>
-
-        ${em.attachments.length > 0 ? `
-          <div class="detail-attachments">
-            <h4 class="detail-attachments-title">Attachments (${em.attachments.length})</h4>
-            <div class="detail-attachments-grid">
-              ${em.attachments.map(a => `
-                <div class="attachment-card" data-name="${a.name}">
-                  <span class="material-symbols-outlined attachment-icon">${a.type.includes('pdf') ? 'picture_as_pdf' : 'insert_drive_file'}</span>
-                  <div class="attachment-info">
-                    <div class="attachment-name">${a.name}</div>
-                    <div class="attachment-size">${a.size}</div>
-                  </div>
-                  <button class="icon-btn attachment-dl-btn" title="Download"><span class="material-symbols-outlined">download</span></button>
-                </div>`).join('')}
-            </div>
-          </div>` : ''}
-
-        <div class="detail-reply-bar">
-          <button class="detail-reply-btn" id="detail-reply-btn">
-            <span class="material-symbols-outlined">reply</span> Reply
-          </button>
-          <button class="detail-reply-btn detail-fwd-btn" id="detail-forward-btn">
-            <span class="material-symbols-outlined">forward</span> Forward
+        <div id="inline-reply-body" contenteditable="true" role="textbox" aria-multiline="true"
+             aria-label="Reply body" placeholder="Write a reply…"></div>
+        <div class="inline-reply-footer">
+          <div style="display:flex;gap:8px">
+            <button class="detail-reply-btn" id="inline-send-btn">
+              <span class="material-symbols-outlined">send</span> Send
+            </button>
+            <button class="icon-btn" id="inline-compose-btn" title="Open in full compose">
+              <span class="material-symbols-outlined">open_in_full</span>
+            </button>
+          </div>
+          <button class="icon-btn" id="inline-discard-btn" title="Discard">
+            <span class="material-symbols-outlined">delete_outline</span>
           </button>
         </div>
       </div>
     `;
 
-    // Wire detail buttons
+    // Wire thread card expand/collapse
+    area.querySelectorAll<HTMLElement>('.thread-card-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const card = header.closest<HTMLElement>('.thread-message-card')!;
+        const wasExpanded = card.classList.contains('expanded');
+        // Collapse all
+        area.querySelectorAll('.thread-message-card').forEach(c => c.classList.remove('expanded'));
+        // Toggle clicked
+        if (!wasExpanded) card.classList.add('expanded');
+      });
+    });
+
+    // Wire attachment downloads inside thread cards
+    area.querySelectorAll<HTMLElement>('.thread-att-dl-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const card = btn.closest<HTMLElement>('[data-att-name]')!;
+        const name = card.dataset['attName'] ?? 'file';
+        const blob = new Blob([`Toggle Mail – ${name}`], { type: 'application/octet-stream' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast(`Downloading ${name}`, 'download');
+      });
+    });
+
+    // Wire inline reply
+    $('inline-send-btn')?.addEventListener('click', async () => {
+      const bodyEl = $('inline-reply-body') as HTMLElement;
+      const replyBody = bodyEl?.innerText?.trim();
+      if (!replyBody) { showToast('Write something first!', 'warning'); return; }
+      try {
+        await state.sendEmail(
+          em.fromEmail,
+          em.subject.match(/^re:/i) ? em.subject : `Re: ${em.subject}`,
+          `<p>${replyBody.replace(/\n/g, '<br>')}</p>`,
+        );
+        bodyEl.innerText = '';
+        showToast('Reply sent!', 'send');
+        sounds.receive();
+      } catch {
+        showToast('Failed to send reply', 'error');
+      }
+    });
+
+    $('inline-compose-btn')?.addEventListener('click', () => compose.reply(id));
+    $('inline-discard-btn')?.addEventListener('click', () => {
+      const bodyEl = $('inline-reply-body') as HTMLElement;
+      if (bodyEl) bodyEl.innerText = '';
+      showToast('Draft discarded', 'delete_outline');
+    });
+  }
+
+  private buildThreadCard(em: Email, idx: number, total: number, activeId: string): string {
+    const isLast = idx === total - 1;
+    // Expand the last (most recent) message and the currently selected one
+    const expanded = isLast || em.id === activeId;
+    const avatarBg = this.avatarColor(em.fromAvatar || em.fromName);
+    const avatarLetter = (em.fromAvatar || em.fromName || '?')[0].toUpperCase();
+    const dateStr = new Date(em.date).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const attHtml = em.attachments?.length > 0 ? `
+      <div style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:14px">
+        <div class="detail-att-title">Attachments (${em.attachments.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          ${em.attachments.map(a => `
+            <div class="detail-att-card" data-att-name="${a.name}">
+              <div class="att-card-icon">
+                <span class="material-symbols-outlined">${a.type?.includes('pdf') ? 'picture_as_pdf' : 'insert_drive_file'}</span>
+              </div>
+              <div class="att-card-info">
+                <div class="att-card-name">${a.name}</div>
+                <div class="att-card-size">${a.size}</div>
+              </div>
+              <button class="att-card-dl-btn thread-att-dl-btn" title="Download">
+                <span class="material-symbols-outlined">download</span>
+              </button>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    return `
+      <div class="thread-message-card ${expanded ? 'expanded' : ''}" data-msg-id="${em.id}">
+        <div class="thread-card-header">
+          <div class="thread-header-left">
+            <div class="thread-avatar" style="background:${avatarBg}">${avatarLetter}</div>
+            <div>
+              <div class="thread-from-name">${em.fromName}
+                <span style="font-weight:400;font-size:12px;color:var(--text-tertiary);margin-left:4px">&lt;${em.fromEmail}&gt;</span>
+              </div>
+              ${!expanded ? `<div class="thread-snippet-preview">${em.snippet}</div>` : ''}
+            </div>
+          </div>
+          <div class="thread-header-right">
+            ${em.attachments?.length > 0 ? `<span class="material-symbols-outlined" style="font-size:16px;color:var(--text-tertiary)">attach_file</span>` : ''}
+            ${em.isStarred ? `<span class="material-symbols-outlined" style="font-size:16px;color:#f9ab00">star</span>` : ''}
+            <span class="thread-date-chip">${dateStr}</span>
+            <span class="material-symbols-outlined thread-expand-icon">expand_more</span>
+          </div>
+        </div>
+        <div class="thread-card-body">
+          <div class="thread-card-meta">
+            <span>to ${em.to || 'me'}</span>
+            <span>•</span>
+            <span>${dateStr}</span>
+            ${!em.isRead ? `<span style="background:var(--color-primary);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px">UNREAD</span>` : ''}
+          </div>
+          <div class="thread-body-content">${em.body}</div>
+          ${attHtml}
+        </div>
+      </div>`;
+  }
+
+  private wireDetailToolbar(em: Email, id: string, detailEl: HTMLElement) {
     $('detail-back-btn')?.addEventListener('click', () => { state.closeEmail(); sounds.click(); });
     $('detail-archive-btn')?.addEventListener('click', () => { state.archiveEmail(id); sounds.archive(); showToast('Archived', 'archive', true); });
     $('detail-delete-btn')?.addEventListener('click', () => { state.deleteEmail(id); sounds.trash(); showToast(i18n.t('movedToTrash'), 'delete', true); });
@@ -369,32 +503,7 @@ class UIController {
     $('detail-unread-btn')?.addEventListener('click', () => { state.toggleRead(id); state.closeEmail(); });
     $('detail-snooze-btn')?.addEventListener('click', () => this.showSnoozeMenu(id));
     $('detail-star-btn')?.addEventListener('click', () => { state.toggleStar(id); sounds.star(); this.renderEmailDetail(id); });
-    $('detail-reply-btn')?.addEventListener('click', () => compose.reply(id));
-    $('detail-reply-icon-btn')?.addEventListener('click', () => compose.reply(id));
-    $('detail-forward-btn')?.addEventListener('click', () => compose.forward(id));
-    $('detail-fwd-icon-btn')?.addEventListener('click', () => compose.forward(id));
     $('detail-more-btn')?.addEventListener('click', () => this.showMoreMenu(id, 'detail-more-btn'));
-    $('detail-more-meta-btn')?.addEventListener('click', () => this.showMoreMenu(id, 'detail-more-meta-btn'));
-
-    detailEl.querySelectorAll<HTMLElement>('.attachment-dl-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const card = btn.closest<HTMLElement>('.attachment-card')!;
-        const name = card.dataset['name'] ?? 'attachment.pdf';
-        const blob = new Blob([`Toggle Mail – ${name}`], { type: 'application/pdf' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = name;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      });
-    });
-
-    detailEl.querySelectorAll<HTMLElement>('.attachment-card').forEach(card => {
-      card.addEventListener('click', e => {
-        if ((e.target as HTMLElement).closest('.attachment-dl-btn')) return;
-        showToast(`Opening ${card.dataset['name']}…`, 'open_in_new');
-      });
-    });
   }
 
   // ─── Menus & Popups ───────────────────────────────────────────────────────

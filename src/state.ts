@@ -257,7 +257,7 @@ class AppState {
   }
 
   // ── Send new email ────────────────────────────────────────
-  async sendEmail(to: string, subject: string, body: string, cc = '', bcc = '') {
+  async sendEmail(to: string, subject: string, body: string, cc = '', bcc = '', attachments: import('./types').Attachment[] = []) {
     const senderEmail = this.currentUser?.email || 'kazam@togglemail.pk';
     const senderName  = this.currentUser?.displayName || 'Kazam Mahmood';
     const senderAvatar= this.currentUser?.avatarText || 'KM';
@@ -279,7 +279,7 @@ class AppState {
       isStarred: false,
       isImportant: false,
       labels: [],
-      attachments: [],
+      attachments: attachments || [],
     };
 
     // Optimistic local update
@@ -289,7 +289,7 @@ class AppState {
 
     // Live dispatch via backend engine
     try {
-      const res = await api.sendEmail({ to, cc, bcc, subject, body });
+      const res = await api.sendEmail({ to, cc, bcc, subject, body, attachments });
       if (res?.record) {
         const idx = this.emails.findIndex(e => e.id === tempId);
         if (idx !== -1) {

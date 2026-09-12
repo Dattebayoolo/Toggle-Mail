@@ -25,6 +25,24 @@ export interface Email {
   snoozeUntil?: string;
   labels: string[];
   attachments: Attachment[];
+  threadId?: string;
+}
+
+export interface Thread {
+  id: string;
+  subject: string;
+  snippet: string;
+  participants: Array<{ name: string; email: string; avatar: string }>;
+  messageCount: number;
+  unreadCount: number;
+  hasAttachments: boolean;
+  isStarred: boolean;
+  isImportant: boolean;
+  labels: string[];
+  lastDate: string;
+  folder: Email['folder'];
+  category: Email['category'];
+  messages: Email[];
 }
 
 export interface Attachment {

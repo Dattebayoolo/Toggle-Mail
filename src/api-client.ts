@@ -154,6 +154,75 @@ class ApiClient {
     }
   }
 
+  async getThreads(filter?: {
+    folder?: Folder;
+    category?: Category;
+    label?: string;
+    search?: string;
+  }): Promise<import('./types').Thread[]> {
+    try {
+      const params = new URLSearchParams();
+      if (filter?.folder) params.set('folder', filter.folder);
+      if (filter?.category) params.set('category', filter.category);
+      if (filter?.label) params.set('label', filter.label);
+      if (filter?.search) params.set('search', filter.search);
+
+      const res = await fetch(`${this.baseUrl}/threads?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch threads');
+      const data = await res.json();
+      return data.threads || [];
+    } catch (err) {
+      console.warn('[ApiClient] Failed to fetch threads, falling back:', err);
+      return [];
+    }
+  }
+
+  async getThread(id: string): Promise<import('./types').Thread | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/threads/${encodeURIComponent(id)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.thread;
+    } catch {
+      return null;
+    }
+  }
+
+  async uploadAttachment(file: File): Promise<{ name: string; size: string; type: string; downloadUrl: string } | null> {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const res = await fetch(`${this.baseUrl}/attachments/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+          'X-Filename': encodeURIComponent(file.name),
+        },
+        body: arrayBuffer,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      return data.file;
+    } catch (err) {
+      console.error('[Upload Error]:', err);
+      return null;
+    }
+  }
+
+  subscribeToEvents(onEvent: (event: any) => void): () => void {
+    if (typeof EventSource === 'undefined') return () => {};
+    const es = new EventSource(`${this.baseUrl}/events`);
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        onEvent(data);
+      } catch {}
+    };
+    es.onerror = () => {
+      // Reconnects automatically
+    };
+    return () => es.close();
+  }
+
   async getStorage(): Promise<StorageStats | null> {
     try {
       const res = await fetch(`${this.baseUrl}/storage`);

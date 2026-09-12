@@ -1,11 +1,19 @@
 // ============================================================
-// Toggle Mail – Core REST API Handler
+// Toggle Mail – Core REST API Handler (v0.2 Enterprise)
 // ============================================================
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 import { db, type EmailRecord } from './db';
 import { smtp } from './smtp';
 import { extractSSOUser } from './sso';
+import { buildThreads } from './threads';
+import { parseSearchQuery, evaluateSearch } from './search';
+import { events } from './events';
+
+const ATTACHMENTS_DIR = path.resolve(process.cwd(), 'data', 'attachments');
 
 function sendJson(res: ServerResponse, status: number, data: any) {
   res.statusCode = status;
@@ -18,8 +26,8 @@ function parseJsonBody(req: IncomingMessage): Promise<any> {
     let body = '';
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > 10 * 1024 * 1024) {
-        // 10MB limit
+      if (body.length > 25 * 1024 * 1024) {
+        // 25MB limit
         req.destroy();
         reject(new Error('Body payload too large'));
       }
@@ -31,6 +39,15 @@ function parseJsonBody(req: IncomingMessage): Promise<any> {
         reject(err);
       }
     });
+    req.on('error', reject);
+  });
+}
+
+function parseBufferBody(req: IncomingMessage): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
 }
@@ -47,6 +64,12 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
   const user = extractSSOUser(req.headers);
 
   try {
+    // ─── GET /api/events (Server-Sent Events) ───────────────────
+    if (pathname === '/api/events' && method === 'GET') {
+      events.addClient(res);
+      return true;
+    }
+
     // ─── GET /api/user ──────────────────────────────────────────
     if (pathname === '/api/user' && method === 'GET') {
       sendJson(res, 200, { user });
@@ -60,6 +83,61 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       return true;
     }
 
+    // ─── GET /api/threads ───────────────────────────────────────
+    if (pathname === '/api/threads' && method === 'GET') {
+      const folder = url.searchParams.get('folder') || undefined;
+      const category = url.searchParams.get('category') || undefined;
+      const label = url.searchParams.get('label') || undefined;
+      const search = url.searchParams.get('search') || undefined;
+
+      let rawEmails = db.getAll();
+
+      // Apply search operator filter if present
+      if (search) {
+        const filter = parseSearchQuery(search);
+        rawEmails = evaluateSearch(rawEmails, filter);
+      }
+
+      let threads = buildThreads(rawEmails);
+
+      if (folder) {
+        if (folder === 'allMail') {
+          threads = threads.filter(t => t.folder !== 'trash' && t.folder !== 'spam');
+        } else if (folder === 'starred') {
+          threads = threads.filter(t => t.isStarred);
+        } else if (folder === 'important') {
+          threads = threads.filter(t => t.isImportant);
+        } else {
+          threads = threads.filter(t => t.folder === folder);
+        }
+      }
+
+      if (category && (!folder || folder === 'inbox')) {
+        threads = threads.filter(t => t.category === category);
+      }
+
+      if (label) {
+        threads = threads.filter(t => t.labels.includes(label));
+      }
+
+      sendJson(res, 200, { threads, total: threads.length });
+      return true;
+    }
+
+    // ─── GET /api/threads/:id ───────────────────────────────────
+    const threadMatch = pathname.match(/^\/api\/threads\/([^/]+)$/);
+    if (threadMatch && method === 'GET') {
+      const threadId = decodeURIComponent(threadMatch[1]);
+      const threads = buildThreads(db.getAll());
+      const thread = threads.find(t => t.id === threadId);
+      if (!thread) {
+        sendJson(res, 404, { error: 'Thread not found' });
+        return true;
+      }
+      sendJson(res, 200, { thread });
+      return true;
+    }
+
     // ─── GET /api/emails ────────────────────────────────────────
     if (pathname === '/api/emails' && method === 'GET') {
       const folder = url.searchParams.get('folder') || undefined;
@@ -67,7 +145,13 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       const label = url.searchParams.get('label') || undefined;
       const search = url.searchParams.get('search') || undefined;
 
-      const emails = db.getAll({ folder, category, label, search });
+      let emails = db.getAll({ folder, category, label });
+
+      if (search) {
+        const filter = parseSearchQuery(search);
+        emails = evaluateSearch(emails, filter);
+      }
+
       sendJson(res, 200, { emails, total: emails.length });
       return true;
     }
@@ -103,6 +187,10 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
         },
         user
       );
+
+      // Broadcast new email event via SSE
+      events.notifyNewEmail(result.record);
+      events.notifyStorageUpdate(db.getStorageStats());
 
       sendJson(res, 201, result);
       return true;
@@ -183,9 +271,55 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       return true;
     }
 
+    // ─── POST /api/attachments/upload ───────────────────────────
+    if (pathname === '/api/attachments/upload' && method === 'POST') {
+      const filename = decodeURIComponent((req.headers['x-filename'] as string) || `attachment_${Date.now()}`);
+      const contentType = (req.headers['content-type'] as string) || 'application/octet-stream';
+      const fileId = `${Date.now()}_${crypto.randomBytes(6).toString('hex')}_${path.basename(filename)}`;
+      const filePath = path.join(ATTACHMENTS_DIR, fileId);
+
+      const buffer = await parseBufferBody(req);
+      fs.writeFileSync(filePath, buffer);
+
+      const sizeStr = buffer.length > 1024 * 1024
+        ? `${(buffer.length / (1024 * 1024)).toFixed(1)} MB`
+        : `${Math.round(buffer.length / 1024)} KB`;
+
+      sendJson(res, 201, {
+        success: true,
+        file: {
+          id: fileId,
+          name: filename,
+          size: sizeStr,
+          sizeBytes: buffer.length,
+          type: contentType,
+          downloadUrl: `/api/attachments/${encodeURIComponent(fileId)}/download`,
+        },
+      });
+      return true;
+    }
+
+    // ─── GET /api/attachments/:id/download ──────────────────────
+    const attachMatch = pathname.match(/^\/api\/attachments\/([^/]+)\/download$/);
+    if (attachMatch && method === 'GET') {
+      const fileId = decodeURIComponent(attachMatch[1]);
+      const filePath = path.join(ATTACHMENTS_DIR, fileId);
+      if (!fs.existsSync(filePath)) {
+        sendJson(res, 404, { error: 'Attachment file not found' });
+        return true;
+      }
+      const stat = fs.statSync(filePath);
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': stat.size,
+        'Content-Disposition': `attachment; filename="${fileId.split('_').slice(2).join('_') || fileId}"`,
+      });
+      fs.createReadStream(filePath).pipe(res);
+      return true;
+    }
+
     // ─── POST /api/emails/sync ──────────────────────────────────
     if (pathname === '/api/emails/sync' && method === 'POST') {
-      // Inbound sync endpoint
       sendJson(res, 200, {
         success: true,
         syncedAt: new Date().toISOString(),

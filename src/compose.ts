@@ -1,9 +1,8 @@
-// Toggle Mail – Compose Window (TypeScript)
-
 import { state } from './state';
 import { sounds } from './sound';
 import { i18n } from './localization';
 import { URDU_PHRASES } from './localization';
+import { api } from './api-client';
 
 class ComposeManager {
   private el: HTMLElement | null = null;
@@ -13,11 +12,13 @@ class ComposeManager {
   private bccVal  = '';
   private subjVal = '';
   private bodyVal = '';
+  private attachments: Array<{ name: string; size: string; type: string; downloadUrl?: string }> = [];
 
   open(prefill: { to?: string; subject?: string; body?: string } = {}) {
     this.toVal   = prefill.to      ?? '';
     this.subjVal = prefill.subject ?? '';
     this.bodyVal = prefill.body    ?? '';
+    this.attachments = [];
     this.render();
   }
 
@@ -51,6 +52,7 @@ class ComposeManager {
     this.el?.remove();
     this.el = null;
     this.maximized = false;
+    this.attachments = [];
   }
 
   toggleMaximize() {
@@ -106,7 +108,23 @@ class ComposeManager {
         </div>
       </div>
 
+      <!-- WYSIWYG Formatting Toolbar -->
+      <div id="compose-wysiwyg-bar" style="display:none;padding:6px 12px;background:var(--bg-surface-variant);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <button type="button" class="icon-btn" data-cmd="bold" title="Bold (Ctrl+B)" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_bold</span></button>
+        <button type="button" class="icon-btn" data-cmd="italic" title="Italic (Ctrl+I)" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_italic</span></button>
+        <button type="button" class="icon-btn" data-cmd="underline" title="Underline (Ctrl+U)" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_underlined</span></button>
+        <button type="button" class="icon-btn" data-cmd="strikeThrough" title="Strikethrough" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">strikethrough_s</span></button>
+        <div style="width:1px;height:18px;background:var(--border-color);margin:0 4px"></div>
+        <button type="button" class="icon-btn" data-cmd="insertUnorderedList" title="Bulleted list" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_list_bulleted</span></button>
+        <button type="button" class="icon-btn" data-cmd="insertOrderedList" title="Numbered list" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_list_numbered</span></button>
+        <button type="button" class="icon-btn" data-cmd="formatBlock" data-val="blockquote" title="Quote" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_quote</span></button>
+        <button type="button" class="icon-btn" data-cmd="removeFormat" title="Clear formatting" style="width:30px;height:30px"><span class="material-symbols-outlined" style="font-size:18px">format_clear</span></button>
+      </div>
+
       <div id="compose-body" class="compose-body" contenteditable="true" dir="auto">${this.bodyVal || ''}</div>
+
+      <!-- Attachment chips tray -->
+      <div id="compose-attachments-tray" style="padding:6px 16px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border-subtle)"></div>
 
       <div class="compose-urdu-toolbar" id="compose-urdu-bar" style="display:none">
         <span class="compose-urdu-label">Quick Phrases:</span>
@@ -118,29 +136,24 @@ class ComposeManager {
           <span class="material-symbols-outlined">send</span> Send
         </button>
         <div class="compose-toolbar-icons">
-          <button class="icon-btn" id="compose-format-btn" title="Formatting">
+          <button class="icon-btn" id="compose-format-btn" title="Toggle formatting toolbar">
             <span class="material-symbols-outlined">format_color_text</span>
           </button>
-          <button class="icon-btn" id="compose-attach-btn" title="Attach files">
+          <button class="icon-btn" id="compose-attach-btn" title="Attach files (or drag & drop)">
             <span class="material-symbols-outlined">attach_file</span>
           </button>
           <button class="icon-btn" id="compose-link-btn" title="Insert link">
             <span class="material-symbols-outlined">link</span>
           </button>
-          <button class="icon-btn" id="compose-emoji-btn" title="Emoji">
-            <span class="material-symbols-outlined">sentiment_satisfied</span>
-          </button>
           <button class="icon-btn" id="compose-urdu-toggle-btn" title="Urdu Phrases">
             <span style="font-size:13px;font-weight:700;font-family:var(--font-urdu)">اردو</span>
-          </button>
-          <button class="icon-btn" id="compose-more-btn" title="More options">
-            <span class="material-symbols-outlined">more_vert</span>
           </button>
           <button class="icon-btn compose-delete-btn" id="compose-discard-btn" title="Discard draft">
             <span class="material-symbols-outlined">delete_outline</span>
           </button>
         </div>
       </div>
+      <input type="file" id="compose-file-input" multiple style="display:none">
     `;
 
     document.body.appendChild(wrap);
@@ -153,6 +166,51 @@ class ComposeManager {
       if (!this.toVal && to) to.focus();
       else (wrap.querySelector<HTMLElement>('#compose-body'))?.focus();
     }, 50);
+  }
+
+  private renderAttachmentsTray(wrap: HTMLElement) {
+    const tray = wrap.querySelector<HTMLElement>('#compose-attachments-tray');
+    if (!tray) return;
+    if (this.attachments.length === 0) {
+      tray.style.display = 'none';
+      return;
+    }
+    tray.style.display = 'flex';
+    tray.innerHTML = this.attachments.map((a, idx) => `
+      <div class="attachment-chip" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-surface-variant);border:1px solid var(--border-color);padding:4px 10px;border-radius:16px;font-size:12px;color:var(--text-primary)">
+        <span class="material-symbols-outlined" style="font-size:16px;color:var(--color-primary)">description</span>
+        <span><strong>${a.name}</strong> (${a.size})</span>
+        <button type="button" class="icon-btn" data-remove-idx="${idx}" style="width:18px;height:18px;margin-left:4px;cursor:pointer">
+          <span class="material-symbols-outlined" style="font-size:14px">close</span>
+        </button>
+      </div>
+    `).join('');
+
+    tray.querySelectorAll<HTMLElement>('[data-remove-idx]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset['removeIdx']!, 10);
+        this.attachments.splice(idx, 1);
+        this.renderAttachmentsTray(wrap);
+      });
+    });
+  }
+
+  private async handleFiles(files: FileList | File[], wrap: HTMLElement) {
+    for (const file of Array.from(files)) {
+      this.showToast(`Uploading ${file.name}…`, 'cloud_upload');
+      const uploaded = await api.uploadAttachment(file);
+      if (uploaded) {
+        this.attachments.push({
+          name: uploaded.name,
+          size: uploaded.size,
+          type: uploaded.type,
+          downloadUrl: uploaded.downloadUrl,
+        });
+        this.renderAttachmentsTray(wrap);
+      }
+    }
+    this.showToast('Attachments ready', 'check_circle');
   }
 
   private bindEvents(wrap: HTMLElement) {
@@ -177,7 +235,7 @@ class ComposeManager {
       const cc   = wrap.querySelector<HTMLInputElement>('#compose-cc')?.value ?? '';
       const bcc  = wrap.querySelector<HTMLInputElement>('#compose-bcc')?.value ?? '';
       if (!to) { wrap.querySelector<HTMLInputElement>('#compose-to')!.focus(); return; }
-      state.sendEmail(to, subj || '(no subject)', body, cc, bcc);
+      state.sendEmail(to, subj || '(no subject)', body, cc, bcc, this.attachments);
       sounds.send();
       this.close();
       this.showToast(i18n.t('messageSent'), 'send');
@@ -197,9 +255,19 @@ class ComposeManager {
 
     wrap.querySelector('#compose-discard-btn')?.addEventListener('click', () => this.close());
 
+    // WYSIWYG Formatting Toggle & Commands
     wrap.querySelector('#compose-format-btn')?.addEventListener('click', () => {
-      document.execCommand('bold', false);
-      wrap.querySelector<HTMLElement>('#compose-body')?.focus();
+      const bar = wrap.querySelector<HTMLElement>('#compose-wysiwyg-bar')!;
+      bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    wrap.querySelectorAll<HTMLElement>('#compose-wysiwyg-bar [data-cmd]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cmd = btn.dataset['cmd']!;
+        const val = btn.dataset['val'] || undefined;
+        document.execCommand(cmd, false, val);
+        wrap.querySelector<HTMLElement>('#compose-body')?.focus();
+      });
     });
 
     wrap.querySelector('#compose-link-btn')?.addEventListener('click', () => {
@@ -207,10 +275,32 @@ class ComposeManager {
       if (url) document.execCommand('createLink', false, url);
     });
 
+    // File attachments & drag-drop
+    const fileInput = wrap.querySelector<HTMLInputElement>('#compose-file-input')!;
     wrap.querySelector('#compose-attach-btn')?.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file'; input.multiple = true;
-      input.click();
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        this.handleFiles(fileInput.files, wrap);
+      }
+    });
+
+    // Drag-and-Drop file handling on compose modal
+    wrap.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      wrap.style.boxShadow = '0 0 0 2px var(--color-google-blue)';
+    });
+    wrap.addEventListener('dragleave', () => {
+      wrap.style.boxShadow = '';
+    });
+    wrap.addEventListener('drop', (e) => {
+      e.preventDefault();
+      wrap.style.boxShadow = '';
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        this.handleFiles(e.dataTransfer.files, wrap);
+      }
     });
 
     wrap.querySelector('#compose-urdu-toggle-btn')?.addEventListener('click', () => {
