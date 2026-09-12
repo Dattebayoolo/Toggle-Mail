@@ -94,8 +94,14 @@ function createPkcePair() {
 
 /**
  * GET /auth/login — start the SSO redirect.
+ * `opts.prompt = 'login'` forces re-authentication at the central service
+ * (used by "Add another account"), ignoring any existing central session.
  */
-export function beginSsoLogin(_req: IncomingMessage, res: ServerResponse): void {
+export function beginSsoLogin(
+  _req: IncomingMessage,
+  res: ServerResponse,
+  opts: { prompt?: 'login' } = {}
+): void {
   const state = crypto.randomUUID();
   const { codeVerifier, codeChallenge } = createPkcePair();
 
@@ -108,6 +114,9 @@ export function beginSsoLogin(_req: IncomingMessage, res: ServerResponse): void 
   authorizeUrl.searchParams.set('scope', SCOPES.join(' '));
   authorizeUrl.searchParams.set('code_challenge', codeChallenge);
   authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+  if (opts.prompt) {
+    authorizeUrl.searchParams.set('prompt', opts.prompt);
+  }
 
   res.statusCode = 302;
   res.setHeader('Location', authorizeUrl.toString());
@@ -219,6 +228,15 @@ export async function handleSessionInfo(req: IncomingMessage, res: ServerRespons
 }
 
 /**
+ * GET /auth/add-account — start a fresh SSO redirect with `prompt=login`,
+ * forcing the central auth to re-authenticate so a different Toggle Account
+ * can be signed in. The app session is replaced when the new account returns.
+ */
+export function beginAddAccount(req: IncomingMessage, res: ServerResponse): void {
+  beginSsoLogin(req, res, { prompt: 'login' });
+}
+
+/**
  * Router used by the Vite middleware. Returns true when the request was an
  * SSO endpoint and has been fully handled.
  */
@@ -227,6 +245,9 @@ export async function handleSsoRequest(req: IncomingMessage, res: ServerResponse
   switch (url.pathname) {
     case '/auth/login':
       beginSsoLogin(req, res);
+      return true;
+    case '/auth/add-account':
+      beginAddAccount(req, res);
       return true;
     case '/auth/callback':
       await handleAuthCallback(req, res);

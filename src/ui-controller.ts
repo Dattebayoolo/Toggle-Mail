@@ -972,7 +972,11 @@ class UIController {
       window.open(email ? `${authBase}/account` : `${authBase}/signup`, '_blank');
       menu.remove();
     });
-    $('pmenu-add')?.addEventListener('click', () => { showToast('Add account feature coming soon!', 'person_add'); menu.remove(); });
+    $('pmenu-add')?.addEventListener('click', () => {
+      // Adds a different Toggle Account: forces central re-authentication
+      // (prompt=login), then the callback replaces this app's session.
+      window.location.href = email ? '/auth/add-account' : '/auth/login';
+    });
     $('pmenu-signout')?.addEventListener('click', () => {
       window.location.href = email ? '/auth/logout' : '/auth/login';
     });
