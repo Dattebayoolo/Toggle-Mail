@@ -1,0 +1,91 @@
+/* ==========================================================================
+   Toggle Mail - Urdu & RTL Stylesheet
+   ========================================================================== */
+
+[dir="rtl"], body.urdu-mode {
+  font-family: var(--font-urdu), 'Plus Jakarta Sans', sans-serif;
+  text-align: right;
+}
+
+body.urdu-mode .brand-name {
+  font-family: var(--font-urdu);
+  font-size: 22px;
+}
+
+body.urdu-mode .nav-label,
+body.urdu-mode .cat-name,
+body.urdu-mode .compose-btn-text,
+body.urdu-mode .row-subject,
+body.urdu-mode .row-snippet,
+body.urdu-mode .detail-subject-title,
+body.urdu-mode .flyout-title {
+  font-family: var(--font-urdu);
+  line-height: 1.9;
+}
+
+/* Floating Compose Modal Positioning for RTL */
+[dir="rtl"] #compose-modal {
+  right: auto;
+  left: 64px;
+}
+
+[dir="rtl"] #compose-modal.maximized {
+  left: 5vw;
+  right: auto;
+}
+
+/* Companion panel positioning for RTL */
+[dir="rtl"] #companion-rail {
+  border-left: none;
+  border-right: 1px solid var(--border-subtle);
+}
+
+[dir="rtl"] #companion-flyout-panel {
+  right: auto;
+  left: var(--companion-rail-width);
+  border-left: none;
+  border-right: 1px solid var(--border-color);
+  box-shadow: 4px 0 16px rgba(0,0,0,0.06);
+  animation: slide-panel-in-rtl 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes slide-panel-in-rtl {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Dropdowns in RTL */
+[dir="rtl"] #apps-launcher-dropdown {
+  right: auto;
+  left: 60px;
+}
+
+[dir="rtl"] #user-profile-dropdown {
+  right: auto;
+  left: 16px;
+}
+
+[dir="rtl"] #to-autocomplete-dropdown {
+  left: 14px;
+  right: 60px;
+}
+
+/* Email row adjustments */
+[dir="rtl"] .row-hover-actions {
+  right: auto;
+  left: 16px;
+}
+
+[dir="rtl"] .row-date {
+  text-align: left;
+}
+
+[dir="rtl"] #toast-notification {
+  left: auto;
+  right: 24px;
+}
+
+[dir="rtl"] .send-dropdown-btn {
+  border-left: none;
+  border-right: 1px solid rgba(255,255,255,0.25);
+}

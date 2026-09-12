@@ -1,0 +1,343 @@
+/* ==========================================================================
+   Toggle Mail - Email Detail & Thread View Stylesheet
+   ========================================================================== */
+
+#email-detail-view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 48px;
+  background-color: var(--bg-surface);
+}
+
+.detail-header-section {
+  margin-bottom: 24px;
+}
+
+.detail-subject-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#detail-labels-tray {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.detail-label-tag {
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--bg-surface-variant);
+  border: 1px solid var(--border-color);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+/* Sender & Recipient Card */
+.detail-sender-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sender-card-left {
+  display: flex;
+  gap: 16px;
+}
+
+.detail-avatar-large {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sender-meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sender-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.sender-name-bold {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sender-email-dim {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.recipient-line {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.security-lock-badge {
+  color: #188038;
+  font-weight: 600;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #e6f4ea;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+[data-theme="dark"] .security-lock-badge {
+  background-color: #0d381e;
+  color: #81c995;
+}
+.security-lock-badge .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.sender-card-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+/* Email Body Content */
+#detail-body-content {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 32px;
+  word-break: break-word;
+}
+
+#detail-body-content p {
+  margin-bottom: 14px;
+}
+
+#detail-body-content table {
+  max-width: 100%;
+}
+
+/* Dark mode adjustment for email body containers */
+[data-theme="dark"] #detail-body-content div[style*="background: #fafafa"],
+[data-theme="dark"] #detail-body-content div[style*="background: #f8f9fa"],
+[data-theme="dark"] #detail-body-content div[style*="background: white"],
+[data-theme="dark"] #detail-body-content div[style*="background:#fafafa"],
+[data-theme="dark"] #detail-body-content div[style*="background:#f8f9fa"],
+[data-theme="dark"] #detail-body-content div[style*="background:white"] {
+  background: #282a2c !important;
+  color: #e8eaed !important;
+  border-color: #3c4043 !important;
+}
+
+[data-theme="dark"] #detail-body-content td {
+  color: #bdc1c6 !important;
+  border-bottom-color: #3c4043 !important;
+}
+
+[data-theme="dark"] #detail-body-content strong {
+  color: #ffffff !important;
+}
+
+/* Attachments Cards */
+#detail-attachments-container {
+  margin: 28px 0;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 20px;
+}
+
+.detail-att-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+
+#detail-attachments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.detail-att-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--bg-surface-variant);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  max-width: 320px;
+  transition: box-shadow var(--transition-fast);
+}
+.detail-att-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.att-card-icon {
+  color: var(--color-google-red);
+}
+.att-card-icon .material-symbols-outlined {
+  font-size: 26px;
+}
+
+.att-card-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.att-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.att-card-size {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.att-card-dl-btn {
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.att-card-dl-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+.att-card-dl-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* Quick Pakistani Greetings */
+.detail-greetings-container {
+  margin-bottom: 16px;
+}
+
+.quick-greetings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+#detail-quick-greetings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-greet-btn {
+  background-color: var(--bg-surface-variant);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.quick-greet-btn:hover {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  border-color: var(--color-primary);
+}
+
+/* Inline Quick Reply Box */
+.inline-reply-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.inline-reply-header {
+  padding: 10px 16px;
+  background-color: var(--bg-surface-variant);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#inline-reply-body {
+  min-height: 100px;
+  padding: 14px 16px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.inline-reply-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background-color: var(--bg-surface-variant);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Print Stylesheet */
+@media print {
+  #app-header,
+  #app-sidebar,
+  #companion-rail,
+  #companion-flyout-panel,
+  #detail-actions-bar,
+  .inline-reply-card,
+  .detail-greetings-container,
+  .att-card-dl-btn,
+  #toast-notification,
+  #compose-modal {
+    display: none !important;
+  }
+
+  body, #app-root, #app-body, #main-content-area, #email-detail-view {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
+    border-radius: 0 !important;
+  }
+
+  .detail-subject-title {
+    font-size: 24pt !important;
+    border-bottom: 2pt solid #0b6623 !important;
+    padding-bottom: 10pt !important;
+  }
+}

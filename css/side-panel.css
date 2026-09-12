@@ -1,0 +1,437 @@
+/* ==========================================================================
+   Toggle Mail - Side Companion Panel Stylesheet (Material Design)
+   ========================================================================== */
+
+#companion-rail {
+  width: var(--companion-rail-width);
+  height: 100%;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.companion-rail-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+.companion-rail-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+.companion-rail-btn.active {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+.companion-rail-btn.active .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+}
+.companion-rail-btn .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.companion-rail-divider {
+  width: 24px;
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 4px 0;
+}
+
+/* Slide-out Companion Flyout Panel */
+#companion-flyout-panel {
+  position: absolute;
+  top: 0;
+  right: var(--companion-rail-width);
+  width: var(--side-panel-width);
+  height: 100%;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -4px 0 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  animation: slide-panel-in 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes slide-panel-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.flyout-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.flyout-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.flyout-title .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.flyout-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* 1. Namaz / Prayer Times View */
+.city-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.city-picker-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+#prayer-city-select {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-variant);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+}
+
+#prayer-timings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prayer-time-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--bg-surface-variant);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+}
+.prayer-time-card:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--color-primary);
+}
+
+.prayer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prayer-time {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-family: monospace;
+}
+
+/* 2. Pakistani Holidays View */
+#holidays-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.holiday-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background-color: var(--bg-surface-variant);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.holiday-date-badge {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  min-width: 65px;
+}
+
+.holiday-info .holiday-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.holiday-info .holiday-type {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* 3. Tasks View */
+#add-task-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+#new-task-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-variant);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+#new-task-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--bg-surface);
+}
+
+.add-task-btn {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+#tasks-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: var(--bg-surface-variant);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  transition: background-color var(--transition-fast);
+}
+.task-item:hover {
+  background-color: var(--bg-hover);
+}
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+.task-check {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.task-text {
+  flex: 1;
+}
+
+.task-del-btn {
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+}
+.task-del-btn:hover {
+  opacity: 1;
+  color: var(--color-google-red);
+}
+.task-del-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* 4. Notes View */
+.notes-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.add-note-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-surface-variant);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.add-note-btn:hover {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+#notes-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-card {
+  padding: 14px;
+  background-color: #fef08a; /* Google Keep Yellow */
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: #1f1f1f;
+}
+[data-theme="dark"] .note-card {
+  background-color: #423e1c;
+  color: #fef08a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.note-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.note-card-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.note-del-btn {
+  color: inherit;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+}
+.note-del-btn:hover {
+  opacity: 1;
+}
+.note-del-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.note-card-body {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.note-card-footer {
+  font-size: 10px;
+  opacity: 0.75;
+  text-align: right;
+}
+
+/* 5. Contacts View */
+#contacts-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--bg-surface-variant);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.contact-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.contact-meta {
+  flex: 1;
+  overflow: hidden;
+}
+
+.contact-meta .contact-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.contact-meta .contact-email {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contact-meta .contact-phone {
+  font-size: 11px;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.contact-meta .contact-role {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.contact-compose-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.contact-compose-btn:hover {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+.contact-compose-btn .material-symbols-outlined {
+  font-size: 18px;
+}

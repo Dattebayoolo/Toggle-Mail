@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pure Clean Toggle SVGs</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p { color: #94a3b8; margin-bottom: 32px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .preview-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: #ffffff;
+      padding: 18px 24px;
+      border-radius: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: space-between;
+    }
+    .preview-dark {
+      background: #181c20;
+      border: 1px solid #2d3135;
+    }
+    .brand-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+    .brand-light { color: #1e293b; }
+    .brand-light .accent { color: #0b6623; }
+    .brand-dark { color: #e2e8f0; }
+    .brand-dark .accent { color: #34a853; }
+    .tag {
+      font-size: 13px;
+      font-weight: 600;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .desc {
+      font-size: 13px;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pure Clean Toggle Switch SVGs (No Slices / No Clutter)</h1>
+  <p>Clean, crisp, modern toggle switches in the active "ON" position with mail identity.</p>
+
+  <div class="grid">
+    <!-- OPTION 1: Sovereign Emerald Active Toggle with Crisp White Knob + Mail Icon -->
+    <div class="card">
+      <span class="tag">Option 1: Emerald Active Toggle + Mail Knob</span>
+      <div class="desc">A classic, modern mobile/web toggle switch in the ON position. Bold emerald pill track with a crisp white sliding knob containing an envelope.</div>
+
+      <!-- Light Mode -->
+      <div class="preview-row">
+        <div class="brand-preview brand-light">
+          <!-- SVG 1 -->
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="t1-green" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#16A34A"/>
+                <stop offset="100%" stop-color="#0B6623"/>
+              </linearGradient>
+              <filter id="t1-knob-sh" x="-20%" y="-20%" width="140%" height="150%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.25"/>
+              </filter>
+            </defs>
+            <!-- Pill Track (Active Emerald) -->
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="url(#t1-green)"/>
+            
+            <!-- Sliding Knob on Right (Active) -->
+            <circle cx="34" cy="14" r="10.5" fill="#FFFFFF" filter="url(#t1-knob-sh)"/>
+            
+            <!-- Envelope inside Knob -->
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="none" stroke="#0B6623" stroke-width="1.2"/>
+            <path d="M29 10.5L34 14L39 10.5" stroke="#0B6623" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+
+      <!-- Dark Mode -->
+      <div class="preview-row preview-dark">
+        <div class="brand-preview brand-dark">
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="t1-green-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#22C55E"/>
+                <stop offset="100%" stop-color="#15803D"/>
+              </linearGradient>
+            </defs>
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="url(#t1-green-dark)"/>
+            <circle cx="34" cy="14" r="10.5" fill="#FFFFFF" filter="url(#t1-knob-sh)"/>
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="none" stroke="#15803D" stroke-width="1.2"/>
+            <path d="M29 10.5L34 14L39 10.5" stroke="#15803D" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION 2: Material 3 Styled Toggle (Clean Off/On Track with Envelope Glyph) -->
+    <div class="card">
+      <span class="tag">Option 2: Material 3 Capsule + Solid Green Knob</span>
+      <div class="desc">Google Material 3 design: Sleek soft-surface capsule track with an emerald sliding knob containing a crisp white envelope mark.</div>
+
+      <!-- Light Mode -->
+      <div class="preview-row">
+        <div class="brand-preview brand-light">
+          <!-- SVG 2 -->
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="t2-knob" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#15803D"/>
+                <stop offset="100%" stop-color="#0B6623"/>
+              </linearGradient>
+              <filter id="t2-sh" x="-20%" y="-20%" width="140%" height="150%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.2"/>
+              </filter>
+            </defs>
+            <!-- Light Soft Track -->
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="#E8F5E9" stroke="#C8E6C9" stroke-width="1.2"/>
+            
+            <!-- Left subtle off-dot / track line -->
+            <circle cx="14" cy="14" r="3" fill="#A5D6A7" opacity="0.6"/>
+
+            <!-- Active Knob -->
+            <circle cx="34" cy="14" r="11" fill="url(#t2-knob)" filter="url(#t2-sh)"/>
+            
+            <!-- Crisp White Mail Glyph in Knob -->
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="#FFFFFF"/>
+            <path d="M29.5 10.5L34 14L38.5 10.5" stroke="#0B6623" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+
+      <!-- Dark Mode -->
+      <div class="preview-row preview-dark">
+        <div class="brand-preview brand-dark">
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Dark Track -->
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="#1B2E21" stroke="#2D4A35" stroke-width="1.2"/>
+            <circle cx="14" cy="14" r="3" fill="#2D4A35"/>
+            <circle cx="34" cy="14" r="11" fill="#22C55E" filter="url(#t2-sh)"/>
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="#0C2B16"/>
+            <path d="M29.5 10.5L34 14L38.5 10.5" stroke="#22C55E" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION 3: Google 4-Color Gradient Toggle (Sleek Modern Tech) -->
+    <div class="card">
+      <span class="tag">Option 3: Smooth Google Gradient Toggle</span>
+      <div class="desc">A smooth horizontal toggle where the track flows from Google Blue to Sovereign Green, with a pristine floating white envelope knob.</div>
+
+      <!-- Light Mode -->
+      <div class="preview-row">
+        <div class="brand-preview brand-light">
+          <!-- SVG 3 -->
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="t3-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#1A73E8"/>
+                <stop offset="50%" stop-color="#34A853"/>
+                <stop offset="100%" stop-color="#0B6623"/>
+              </linearGradient>
+              <filter id="t3-sh" x="-20%" y="-20%" width="140%" height="150%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.25"/>
+              </filter>
+            </defs>
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="url(#t3-grad)"/>
+            <circle cx="34" cy="14" r="10.5" fill="#FFFFFF" filter="url(#t3-sh)"/>
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="none" stroke="#0B6623" stroke-width="1.3"/>
+            <path d="M29 10.5L34 14L39 10.5" stroke="#0B6623" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+
+      <!-- Dark Mode -->
+      <div class="preview-row preview-dark">
+        <div class="brand-preview brand-dark">
+          <svg width="44" height="26" viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="46" height="26" rx="13" fill="url(#t3-grad)"/>
+            <circle cx="34" cy="14" r="10.5" fill="#FFFFFF" filter="url(#t3-sh)"/>
+            <rect x="29" y="10" width="10" height="7.5" rx="1.2" fill="none" stroke="#0B6623" stroke-width="1.3"/>
+            <path d="M29 10.5L34 14L39 10.5" stroke="#0B6623" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Toggle<span class="accent">Mail</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
