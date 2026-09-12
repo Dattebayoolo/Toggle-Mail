@@ -919,18 +919,36 @@ class UIController {
   }
 
   // ─── Profile Menu ─────────────────────────────────────────────────────────
-  private showProfileMenu() {
+  private async showProfileMenu() {
     const existing = $('profile-menu');
     if (existing) { existing.remove(); return; }
+
+    // Resolve the real Toggle Account session (falls back to signed-out view).
+    let session: { signed_in: boolean; user?: { email: string }; auth_service?: string } | null = null;
+    try {
+      const res = await fetch('/auth/me', { credentials: 'same-origin' });
+      session = await res.json();
+    } catch { /* signed-out / offline */ }
+
+    const email = session?.signed_in && session.user ? session.user.email : '';
+    const localPart = email ? email.split('@')[0] : '';
+    const displayName = localPart
+      ? localPart.replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      : 'Guest';
+    const initials = email
+      ? email.substring(0, 2).toUpperCase()
+      : '?';
+    const authBase = session?.auth_service || 'http://localhost:4000';
+
     const menu = document.createElement('div');
     menu.id = 'profile-menu';
     menu.className = 'profile-dropdown';
     menu.innerHTML = `
       <div class="profile-dropdown-header">
-        <div class="profile-avatar-lg">KM</div>
+        <div class="profile-avatar-lg">${initials}</div>
         <div>
-          <div class="profile-name-lg">Kazam Mahmood</div>
-          <div class="profile-email-sm">kazam@toggle.pk</div>
+          <div class="profile-name-lg">${displayName}</div>
+          <div class="profile-email-sm">${email || 'Not signed in'}</div>
         </div>
       </div>
       <hr class="profile-divider">
@@ -942,7 +960,7 @@ class UIController {
       </button>
       <hr class="profile-divider">
       <button class="dropdown-item" id="pmenu-signout">
-        <span class="material-symbols-outlined">logout</span> Sign out
+        <span class="material-symbols-outlined">logout</span> ${email ? 'Sign out' : 'Sign in with Toggle Account'}
       </button>`;
     document.body.appendChild(menu);
     const btn = $('profile-btn');
@@ -950,9 +968,14 @@ class UIController {
       const r = btn.getBoundingClientRect();
       menu.style.cssText = `top:${r.bottom + 8}px;right:${window.innerWidth - r.right}px`;
     }
-    $('pmenu-manage')?.addEventListener('click', () => { showToast('Opening account settings…', 'manage_accounts'); menu.remove(); });
+    $('pmenu-manage')?.addEventListener('click', () => {
+      window.open(email ? `${authBase}/account` : `${authBase}/signup`, '_blank');
+      menu.remove();
+    });
     $('pmenu-add')?.addEventListener('click', () => { showToast('Add account feature coming soon!', 'person_add'); menu.remove(); });
-    $('pmenu-signout')?.addEventListener('click', () => { showToast('Signing out…', 'logout'); setTimeout(() => location.reload(), 1200); menu.remove(); });
+    $('pmenu-signout')?.addEventListener('click', () => {
+      window.location.href = email ? '/auth/logout' : '/auth/login';
+    });
     setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 10);
   }
 

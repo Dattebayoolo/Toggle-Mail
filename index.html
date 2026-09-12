@@ -2070,5 +2070,24 @@
 
 <!-- Vite / TypeScript Entry Point -->
 <script type="module" src="/src/main.ts"></script>
+<script>
+  /* Toggle Account SSO — reflect the session state on the avatar button */
+  (function () {
+    fetch('/auth/me', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var btn = document.getElementById('profile-btn');
+        if (!btn) return;
+        if (data && data.signed_in && data.user && data.user.email) {
+          btn.textContent = data.user.email.substring(0, 2).toUpperCase();
+          btn.title = 'Toggle Account: ' + data.user.email;
+        } else {
+          btn.textContent = '?';
+          btn.title = 'Sign in with Toggle Account';
+        }
+      })
+      .catch(function () { /* keep the default state */ });
+  })();
+</script>
 </body>
 </html>
